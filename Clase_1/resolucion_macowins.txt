@@ -1,0 +1,77 @@
+** Requerimientos **
+
+Saber el precio de venta de una prenda, y su tipo.
+Saber las ganancias de un determinado día.
+
+** Solución utilizando pseudocódigo OOP **
+
+// --------------------------------------Prendas--------------------------------------
+
+class Prenda {
+	const property tipo; // oneOf sacos, pantalones, camisas
+	const property precioBase;
+	method precio () = precioBase;
+}
+
+class Nueva inherits Prenda { }
+
+class Promocion inherits Prenda {
+	var property descuento;
+	override method precio () = (self.precioBase() - self.descuento()).max(0) ;
+}
+
+class Liquidacion inhertis Prenda {
+	override method precio () = self.precioBase() * 0.5;
+}
+
+// --------------------------------------Ventas--------------------------------------
+
+
+class Venta {
+	const property prendasVendidas = [];
+	const property fechaDeVenta;
+	method cantVendida = self.prendasVendidas().count();
+	method importe () = cantVendida.sum { prenda => prenda.precio() }
+}
+
+class VentaEfectivo inherits Venta { }
+
+class VentaTarjeta inherits Venta {
+	const property cantCuotas;
+  const property coeficiente;
+	method importe () = {
+    const recargo = self.cantCuotas() * self.coeficiente() + self.cantVendida.sum { prenda => prenda.precio() * 0,01 }
+    return super() + recargo;
+  }
+}
+
+// --------------------------------------Local--------------------------------------
+
+class Local {
+	var property ventas = [];
+  method ventasDiarias (fecha) = self.ventas.filter { venta => venta.fecha() === fecha);
+  method valorDeVentaDiaria(fecha) {
+	  const ventasPorDia = self.ventasDiarias(fecha);
+	  return ventasPorDia.sum { venta => venta.importe() }
+  }
+}
+
+// ------------------------------------------------------------------------------------
+
+** Se adjunta diagrama de clases en el mismo repositorio **
+
+** Explicación coloquial **
+
+Adopté 3 modelos base, sobre los cuales heredo. 
+
+- El primer modelo base es el de prenda, el cual tiene como atributos su tipo, su precio base y un método que retorna su valor. 
+Sobre este modelo base, creo otros tres que heredan del mismo, y remiten a los distintos estados en los que puede encontrarse una prenda (Nueva, Promocion, Liquidación).
+Estos tres 'submodelos' comparten las mismas propiedades que su padre, mientras que cambia la forma en la cual se calcula su valor, razón por la cual hago un override del método precio y agrego propiedades que sean necesarias para poder calcularlo.
+
+- El segundo modelo es el de una venta, la cual tiene como propiedades un array de prendas vendidas en dicha venta, la fecha de venta, y dos métodos que utilizo para obtener la cantidad de prendas vendidas, y el importe de la venta.
+Sobre este modelo, creo otros dos que heredan del mismo, y remiten a las modalidades de pago de la venta efectuada, dado que comparten todas sus propiedades pero varía la forma en la cual se calcula el importe de la venta, razón por la cual hago un override del método para tal fin.
+
+- El tercer modelo es el negocio en sí mismo. En este caso se trata de uno sólo pero podría instanciar varias veces esta clase si por ejemplo Macowins tuviera distintas sucursales y quisiera saber las ventas de cada una por separado.
+Este modelo tiene un método para obtener todas las ventas efectuadas en un día específico, para lo cual utilizo la función filter, y posee un segundo método que calcula el importe vendido, totalizando las ventas, previo haber filtrado del total de ventas las que corresponden al día que me interesa.
+
+
